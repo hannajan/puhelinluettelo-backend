@@ -23,6 +23,8 @@ let persons = [
     }
 ]
 
+const generateId = () => Math.floor(Math.random() * 1000000)
+
 app.get('/', (req, res) => {
     res.send('<h1>Notes backend</h1>')
 })
@@ -45,6 +47,29 @@ app.get('/info', (req, res) => {
     const content = `Phonebook has info for ${persons.length} people</br></br>${new Date()}`
 
     res.send(content)
+})
+
+app.post('/api/persons', (req, res) => {
+    const body = req.body
+
+    if(!body.name || !body.number) {
+        return res.status(400).json({
+            error: 'name or phonenumber missing'
+        })
+    } else if(persons.find(p => p.name === body.name)) {
+        return res.status(400).json({
+            error: 'name must be unique'
+        })
+    }
+
+    const person = {
+        id: generateId(),
+        name: body.name,
+        number: body.number
+    }
+
+    persons = persons.concat(person)
+    res.status(200).json(person)
 })
 
 app.delete('/api/persons/:id', (req, res) => {
