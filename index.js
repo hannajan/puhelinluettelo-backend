@@ -1,7 +1,15 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
 const morgan = require('morgan')
 const cors = require('cors')
+const mongoose = require('mongoose')
+
+const Person = require('./models/person')
+
+//const password = process.argv[2]
+//const url = `mongodb+srv://fullstack:FuRul35see@cluster0.7tfts.mongodb.net/phonebook-app?retryWrites=true&w=majority`
+//mongoose.connect(url)
 
 
 app.use(express.json())
@@ -49,7 +57,9 @@ app.get('/', (req, res) => {
 })
 
 app.get('/api/persons', (req, res) => {
-    res.json(persons)
+    Person.find({}).then(persons => {
+        res.json(persons)
+    })
 })
 
 app.get('/api/persons/:id', (req, res) => {
@@ -98,7 +108,7 @@ app.delete('/api/persons/:id', (req, res) => {
     res.status(204).end()
 })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
