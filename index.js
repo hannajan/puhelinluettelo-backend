@@ -44,7 +44,7 @@ let persons = [
 const generateId = () => Math.floor(Math.random() * 1000000)
 
 app.get('/', (req, res) => {
-    res.send('<h1>Notes backend</h1>')
+    res.send('<h1>Persons backend</h1>')
 })
 
 app.get('/api/persons', (req, res) => {
