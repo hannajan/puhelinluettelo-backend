@@ -33,12 +33,19 @@ app.get('/api/persons', (req, res) => {
     Person.find({}).then(persons => {
         res.json(persons)
     })
+    .catch(error => console.log(error.message))
 })
 
-app.get('/api/persons/:id', (req, res) => {
-    Person.findById(req.params.id).then(person => {
-        res.json(person)
-    })
+app.get('/api/persons/:id', (req, res, next) => {
+    Person.findById(req.params.id)
+        .then(person => {
+            if(person) {
+                res.json(person)
+            } else {
+                res.status(404).end()
+            }
+        })
+        .catch(error => next(error))
 })
 
 app.get('/info', (req, res) => {
@@ -46,15 +53,18 @@ app.get('/info', (req, res) => {
         const content = `Phonebook has info for ${persons.length} people</br></br>${new Date()}`
         res.send(content)          
     })
+    .catch(error => next(error))
 })
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
     const body = req.body
 
     if(!body.name || !body.number) {
-        return res.status(400).json({
-            error: 'name or phonenumber missing'
-        })
+        const error = {
+            name: 'MissingNameOrNumber',
+            message: 'name or phonenumber missing'
+        }
+        return next(error)
     }
 
     const person = new Person({
@@ -65,6 +75,7 @@ app.post('/api/persons', (req, res) => {
     person.save().then(savedPerson => {
         res.json(savedPerson)
     })
+    .catch(error => next(error))
 })
 
 app.delete('/api/persons/:id', (req, res, next) => {
@@ -77,6 +88,28 @@ app.delete('/api/persons/:id', (req, res, next) => {
         return next(error)
     })
 })
+
+const unknownEndpoint = (req, res) => {
+    res.status(404).send({ error: 'unknown endpoint' })
+}
+
+app.use(unknownEndpoint)
+
+const errorHandler = (error, req, res, next) => {
+    console.log('the error: ', error)
+    console.log('errorHandler')
+
+    if(error.name === 'CastError') {
+        return res.status(400).send({ error: 'malformatted id'})
+    }
+    if(error.name === 'MissingNameOrNumber') {
+        return res.status(400).send({ error: error.message })
+    }
+
+    next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
